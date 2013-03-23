@@ -24,10 +24,10 @@ pull.pipeableSource(function (getStream, compare, length, min, max) {
     var mStream =
       getStream(middle)
       .pipe(peek(function (end, mPeek) {
-        console.log('COMPARE', mPeek, min)
+        console.log('COMPARE', mPeek, min, compare(mPeek, min))
         if(mPeek == min)
           defer.resolve(mStream)
-        else if(mPeek > min)
+        else if(compare(mPeek, min) > 0)
           recurse(left, middle, lStream, mStream, lPeek, mPeek)
         else
           recurse(middle, right, mStream, rStream, mPeek, rPeek)
@@ -40,14 +40,14 @@ pull.pipeableSource(function (getStream, compare, length, min, max) {
 
 var range = exports.range = function (min, max, compare) {
   compare = compare || function (a, b) {
-    return ( a < target ? -1 
-           : a > target ?  1 
-           :               0 )
+    return ( a < b ? -1 
+           : a > b ?  1 
+           :          0 )
   } 
   return pull.filter(function (data) {
-    return min == null || min <= data
+    return min == null || compare(min, data) <= 0
   }).pipe(pull.take(function (data) {
-    return max == null || max >= data
+    return max == null || compare(data, max) <= 0
   }))
 }
 
