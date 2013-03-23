@@ -33,22 +33,13 @@ function makeTest (min, max, check) {
 
   test('random array (' + min + ', ' + max + ')', function (t) {
 
-  /*
-    function createComparator(target) {
-      return function (a) {
-        return ( a < target ? -1 
-               : a > target ?  1 
-               :               0 )
-      } 
-    }
-  */
+  function compare (a, b) {
+    return ( a < target ? -1 
+           : a > target ?  1 
+           :               0 )
+  } 
 
-  /*
-    var min = Math.random()
-    var max = min + (Math.random()/3)
-  */
-
-    blockRange(getStream, blocks, min, max)
+    blockRange(getStream, compare, blocks, min, max)
       .pipe(pull.writeArray(function (end, actual) {
         var accessed1 = accessed
         accessed = {}
