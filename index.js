@@ -1,7 +1,8 @@
 var pull = require('pull-stream')
 
 exports = module.exports = 
-pull.pipeableSource(function (getStream, length, min, max) {
+pull.pipeableSource(function (getStream, compare, length, min, max) {
+
   if(min == null)
     return getStream(0)
       .pipe(range(min, max))
@@ -16,12 +17,14 @@ pull.pipeableSource(function (getStream, length, min, max) {
     if(left + 1 === right) {
       return defer.resolve(lStream || rStream)
     }
+
     var middle = Math.round((left + right) / 2)
     middle = Math.min(Math.max(0, middle), length)
 
     var mStream =
       getStream(middle)
       .pipe(peek(function (end, mPeek) {
+        console.log('COMPARE', mPeek, min)
         if(mPeek == min)
           defer.resolve(mStream)
         else if(mPeek > min)
