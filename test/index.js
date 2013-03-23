@@ -34,8 +34,8 @@ function makeTest (min, max, check) {
   test('random array (' + min + ', ' + max + ')', function (t) {
 
   function compare (a, b) {
-    return ( a < target ? -1 
-           : a > target ?  1 
+    return ( a < b ? -1 
+           : a > b ?  1 
            :               0 )
   } 
 
