@@ -38,7 +38,12 @@ pull.pipeableSource(function (getStream, compare, length, min, max) {
   return defer.pipe(range(min, max))
 })
 
-var range = exports.range = function (min, max) {
+var range = exports.range = function (min, max, compare) {
+  compare = compare || function (a, b) {
+    return ( a < target ? -1 
+           : a > target ?  1 
+           :               0 )
+  } 
   return pull.filter(function (data) {
     return min == null || min <= data
   }).pipe(pull.take(function (data) {
