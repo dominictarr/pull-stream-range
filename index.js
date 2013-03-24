@@ -2,16 +2,19 @@ var pull = require('pull-stream')
 
 exports = module.exports = 
 pull.pipeableSource(function (getStream, compare, length, min, max) {
-
+  if(!compare) throw new Error('must provide compare(a, b)')
   if(min == null)
     return getStream(0)
-      .pipe(range(min, max))
+      .pipe(range(min, max, compare))
   //getStream(n) returns an iterator (pull-stream style)
   //that starts in the nth block.
   //length is the number of blocks.
   //compare is a sort function like Array#sort(comparator)
   
   var defer = pull.defer()
+
+  if(length !== Math.round(length))
+    throw new Error('length must be whole number')
 
   ;(function recurse (left, right, lStream, rStream, lPeek, rPeek) {
     if(left + 1 === right) {
@@ -24,9 +27,12 @@ pull.pipeableSource(function (getStream, compare, length, min, max) {
     var mStream =
       getStream(middle)
       .pipe(peek(function (end, mPeek) {
-        console.log('COMPARE', mPeek, min, compare(mPeek, min))
-        if(mPeek == min)
-          defer.resolve(mStream)
+
+      if(end) {
+        throw new Error('empty stream should never happen')
+      }
+        if(compare(mPeek, min) === 0)
+          return defer.resolve(mStream)
         else if(compare(mPeek, min) > 0)
           recurse(left, middle, lStream, mStream, lPeek, mPeek)
         else
@@ -35,7 +41,7 @@ pull.pipeableSource(function (getStream, compare, length, min, max) {
 
   })(-1, length)
 
-  return defer.pipe(range(min, max))
+  return defer.pipe(range(min, max, compare))
 })
 
 var range = exports.range = function (min, max, compare) {
@@ -45,9 +51,10 @@ var range = exports.range = function (min, max, compare) {
            :          0 )
   } 
   return pull.filter(function (data) {
-    return min == null || compare(min, data) <= 0
+    if(!data) return false
+    return min == null || (compare(min, data) <= 0) // && compare(data, max) <= 0)
   }).pipe(pull.take(function (data) {
-    return max == null || compare(data, max) <= 0
+    return max == null || (compare(data, max) <= 0)
   }))
 }
 
